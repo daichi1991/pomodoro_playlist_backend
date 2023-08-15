@@ -13,6 +13,7 @@ Rails.application.routes.draw do
       end
       resources :playlists do
         get :current_user_playlists, on: :collection
+        get :get_playlist, on: :collection
       end
     end
   end
