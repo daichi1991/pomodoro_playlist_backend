@@ -25,4 +25,29 @@ module SpotifyAuthUtils
     random_string
   end
 
+  def request_spotify_api(request_type, uri, authorization = nil, request_body = nil)
+    auth_options = {
+      uri: uri,
+      body: request_body,
+      headers: {
+        Authorization: authorization
+      },
+      json: true
+    }
+
+    uri = URI.parse(auth_options[:uri])
+    http = Net::HTTP.new(uri.host, uri.port)
+    http.use_ssl = true
+
+    request = Net::HTTP::Get.new(uri.path) if request_type == 'GET'
+    request = Net::HTTP::Post.new(uri.path) if request_type == 'POST'
+
+    request.set_form_data(auth_options[:body]) if request_body
+    request['Authorization'] = auth_options[:headers][:Authorization] if authorization
+
+    response = http.request(request)
+    response_body = JSON.parse(response.body)
+    render json: { response_body: response_body }
+  end
+
 end

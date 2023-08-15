@@ -17,57 +17,40 @@ class Api::V1::UsersController < ApplicationController
       client_id = ENV["SPOTIFY_CLIENT_ID"]
       client_secret = ENV["SPOTIFY_CLIENT_SECRET"]
 
-      auth_options = {
-        url: 'https://accounts.spotify.com/api/token',
-        body: {
-          code: code,
-          redirect_uri: redirect_uri,
-          grant_type: 'authorization_code'
-        },
-        headers: {
-          Authorization: 'Basic ' + Base64.strict_encode64("#{client_id}:#{client_secret}")
-        },
-        json: true
+      uri = 'https://accounts.spotify.com/api/token'
+      authorization = 'Basic ' + Base64.strict_encode64("#{client_id}:#{client_secret}")
+      request_body = {
+        code: code,
+        redirect_uri: redirect_uri,
+        grant_type: 'authorization_code'
       }
+      request_spotify_api('POST', uri, authorization, request_body)
 
-      uri = URI.parse(auth_options[:url])
-      http = Net::HTTP.new(uri.host, uri.port)
-      http.use_ssl = true
-
-      request = Net::HTTP::Post.new(uri.path)
-      request.set_form_data(auth_options[:body])
-      request['Authorization'] = auth_options[:headers][:Authorization]
-
-      response = http.request(request)
-      response_body = JSON.parse(response.body)
-      render json: { response_body: response_body }
     end
   end
 
   def refresh_token
+    client_id = ENV["SPOTIFY_CLIENT_ID"]
+    client_secret = ENV["SPOTIFY_CLIENT_SECRET"]
+
     refresh_token = params[:refresh_token]
-    auth_options = {
-      uri: 'https://accounts.spotify.com/api/token',
-      body: {
-        grant_type: 'refresh_token',
-        refresh_token: refresh_token
-      },
-      headers: {
-        Authorization: 'Basic ' + Base64.strict_encode64("#{client_id}:#{client_secret}")
-      },
-      json: true
+
+    uri = 'https://accounts.spotify.com/api/token'
+    authorization = 'Basic ' + Base64.strict_encode64("#{client_id}:#{client_secret}")
+    request_body = {
+      grant_type: 'refresh_token',
+      refresh_token: refresh_token
     }
 
-    uri = URI.parse(auth_options[:uri])
-    http = Net::HTTP.new(uri.host, uri.port)
-    http.use_ssl = true
+    request_spotify_api('POST', uri, authorization, request_body)
+  end
 
-    request = Net::HTTP::Post.new(uri.path)
-    request.set_form_data(auth_options[:body])
-    request['Authorization'] = auth_options[:headers][:Authorization]
+  def profile
+    access_token = params[:access_token]
 
-    response = http.request(request)
-    response_body = JSON.parse(response.body)
-    render json: { response_body: response_body }
+    uri = 'https://api.spotify.com/v1/me'
+    authorization = 'Bearer ' + access_token
+
+    request_spotify_api('GET', uri, authorization)
   end
 end
