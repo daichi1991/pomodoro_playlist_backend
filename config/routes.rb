@@ -7,14 +7,13 @@ Rails.application.routes.draw do
     namespace :v1 do
       resources :users do
         get :login, on: :collection
-        get :callback, on: :collection
-        get :refresh_token, on: :collection
-        get :profile, on: :collection
+        get :get_tokens, on: :collection
       end
       resources :playlists do
         get :current_user_playlists, on: :collection
         get :get_playlist, on: :collection
       end
+      resources :pomodoros, only: [:index, :create]
     end
   end
 end

@@ -3,17 +3,24 @@ class Api::V1::UsersController < ApplicationController
 
   def login
     login_url = spotify_auth_url
-    render json: { login: login_url }
+    render json: { login_url: login_url }
   end
 
-  def callback
-    code = params[:code] || nil
-    state = params[:state] || nil
+  def get_tokens
+    code = params[:code]
+    state = params[:state]
+    refresh_token = get_refresh_token(code, state)
+    access_token = get_access_token(refresh_token)
+    render json: { refresh_token: refresh_token, access_token: access_token }, status: :ok
+  end
 
+  private
+
+  def get_refresh_token(code, state)
     if state.nil?
       redirect '/#' + URI.encode_www_form(error: 'state_mismatch')
     else
-      redirect_uri = 'http://localhost:3000/api/v1/users/callback'
+      redirect_uri = 'http://localhost:3001'
       client_id = ENV["SPOTIFY_CLIENT_ID"]
       client_secret = ENV["SPOTIFY_CLIENT_SECRET"]
 
@@ -24,16 +31,14 @@ class Api::V1::UsersController < ApplicationController
         redirect_uri: redirect_uri,
         grant_type: 'authorization_code'
       }
-      request_spotify_api('POST', uri, authorization, request_body)
-
+      refresh_token_response = request_spotify_api('POST', uri, authorization, request_body)
+      refresh_token = refresh_token_response['refresh_token']
     end
   end
 
-  def refresh_token
+  def get_access_token(refresh_token)
     client_id = ENV["SPOTIFY_CLIENT_ID"]
     client_secret = ENV["SPOTIFY_CLIENT_SECRET"]
-
-    refresh_token = params[:refresh_token]
 
     uri = 'https://accounts.spotify.com/api/token'
     authorization = 'Basic ' + Base64.strict_encode64("#{client_id}:#{client_secret}")
@@ -42,7 +47,8 @@ class Api::V1::UsersController < ApplicationController
       refresh_token: refresh_token
     }
 
-    request_spotify_api('POST', uri, authorization, request_body)
+    access_token_response = request_spotify_api('POST', uri, authorization, request_body)
+    access_token = access_token_response['access_token']
   end
 
   def profile

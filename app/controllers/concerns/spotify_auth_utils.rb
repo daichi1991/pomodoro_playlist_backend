@@ -3,8 +3,8 @@ module SpotifyAuthUtils
 
   def spotify_auth_url
     state = generate_random_string(16)
-    scope = 'user-read-private user-read-email'
-    redirect_uri = 'http://localhost:3000/api/v1/users/callback'
+    scope = 'user-read-private user-read-playback-state user-read-email streaming playlist-read-private user-modify-playback-state user-read-currently-playing'
+    redirect_uri = 'http://localhost:3001'
     query_params = {
       response_type: 'code',
       client_id: ENV["SPOTIFY_CLIENT_ID"],
@@ -47,7 +47,6 @@ module SpotifyAuthUtils
 
     response = http.request(request)
     response_body = JSON.parse(response.body)
-    render json: { response_body: response_body }
   end
 
 end
