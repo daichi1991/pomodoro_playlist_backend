@@ -11,12 +11,22 @@ class Api::V1::PomodorosController < ApplicationController
   end
 
   def index
-    user = User.find_by(spotify_id: params[:spotify_user_id])
+    spotify_user_id = request.headers["Pomodoro-Authorization"]
+    user = User.find_by(spotify_id: spotify_user_id)
     if user
       pomodoros = user.pomodoros
       render json: { pomodoros: pomodoros }, status: :ok
     else
       render json: { errors: ["Couldn't find User"] }, status: :unprocessable_entity
+    end
+  end
+
+  def show
+    pomodoro = Pomodoro.find_by(id: params[:id])
+    if pomodoro
+      render json: { pomodoro: pomodoro }, status: :ok
+    else
+      render json: { errors: ["Couldn't find Pomodoro"] }, status: :unprocessable_entity
     end
   end
 
