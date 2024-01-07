@@ -7,6 +7,7 @@ class Pomodoro < ApplicationRecord
   validates :break_time, presence: true, numericality: { only_integer: true, greater_than: 0 }
   validates :term_count, presence: true, numericality: { only_integer: true, greater_than: 0 }
   validates :long_break_time, presence: true, numericality: { only_integer: true, greater_than: 0 }
-  
+  validates :term_repeat_count, presence: true, numericality: { only_integer: true, greater_than: 0 }
+
   belongs_to :user
 end

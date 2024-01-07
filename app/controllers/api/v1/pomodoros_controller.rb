@@ -32,6 +32,6 @@ class Api::V1::PomodorosController < ApplicationController
 
   private
   def pomodoro_params
-    params.require(:pomodoro).permit(:name, :work_time_playlist_id, :break_time_playlist_id, :work_time, :break_time, :term_count, :long_break_time)
+    params.require(:pomodoro).permit(:name, :work_time_playlist_id, :break_time_playlist_id, :work_time, :break_time, :term_count, :long_break_time, :term_repeat_count)
   end
 end

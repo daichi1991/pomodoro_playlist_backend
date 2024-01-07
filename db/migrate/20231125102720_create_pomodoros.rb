@@ -9,6 +9,7 @@ class CreatePomodoros < ActiveRecord::Migration[7.0]
       t.integer :break_time, null: false
       t.integer :term_count, null: false
       t.integer :long_break_time, null: false
+      t.integer :term_repeat_count, null: false
       t.timestamps
     end
   end

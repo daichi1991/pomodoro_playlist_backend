@@ -23,6 +23,7 @@ ActiveRecord::Schema[7.0].define(version: 2023_11_25_102720) do
     t.integer "break_time", null: false
     t.integer "term_count", null: false
     t.integer "long_break_time", null: false
+    t.integer "term_repeat_count", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["user_id"], name: "index_pomodoros_on_user_id"

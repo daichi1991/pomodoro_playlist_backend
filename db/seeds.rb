@@ -18,5 +18,6 @@ pomodoro = Pomodoro.find_or_create_by(
   work_time: 25,
   break_time: 5,
   term_count: 4,
-  long_break_time: 15
+  long_break_time: 15,
+  term_repeat_count: 3
 )
