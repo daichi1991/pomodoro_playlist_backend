@@ -86,4 +86,23 @@ RSpec.describe "Api::V1::Pomodoros", type: :request do
       expect(JSON.parse(response.body)["errors"]).to eq(["Couldn't find Pomodoro"])
     end
   end
+  describe "DELETE /destroy" do
+    it "returns http success" do
+      delete "/api/v1/pomodoros/#{pomodoros[0].id}", headers: request_headers
+      expect(response).to have_http_status(:success)
+    end
+    it "deletes the pomodoro" do
+      expect {
+        delete "/api/v1/pomodoros/#{pomodoros[0].id}", headers: request_headers
+      }.to change(Pomodoro, :count).by(-1)
+    end
+    it "returns the deleted pomodoro" do
+      delete "/api/v1/pomodoros/#{pomodoros[0].id}", headers: request_headers
+      expect(JSON.parse(response.body)["pomodoro"].keys).to eq(["id", "user_id", "name", "work_time_playlist_id", "break_time_playlist_id", "work_time", "break_time", "term_count", "long_break_time", "term_repeat_count", "created_at", "updated_at"])
+    end
+    it "returns error if pomodoro does not exist" do
+      delete "/api/v1/pomodoros/xyz", headers: request_headers
+      expect(JSON.parse(response.body)["errors"]).to eq(["Couldn't find Pomodoro"])
+    end
+  end
 end

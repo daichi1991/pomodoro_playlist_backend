@@ -30,6 +30,16 @@ class Api::V1::PomodorosController < ApplicationController
     end
   end
 
+  def destroy
+    pomodoro = Pomodoro.find_by(id: params[:id])
+    return render json: { errors: ["Couldn't find Pomodoro"] }, status: :unprocessable_entity unless pomodoro
+    if pomodoro.destroy
+      render json: { pomodoro: pomodoro }, status: :ok
+    else
+      render json: { errors: pomodoro.errors.full_messages }, status: :unprocessable_entity
+    end
+  end
+
   private
   def pomodoro_params
     params.require(:pomodoro).permit(:name, :work_time_playlist_id, :break_time_playlist_id, :work_time, :break_time, :term_count, :long_break_time, :term_repeat_count)
