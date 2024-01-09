@@ -13,7 +13,7 @@ Rails.application.routes.draw do
         get :current_user_playlists, on: :collection
         get :get_playlist, on: :collection
       end
-      resources :pomodoros, only: [:index, :create, :show, :destroy]
+      resources :pomodoros, only: [:index, :create, :show, :update, :destroy]
     end
   end
 end

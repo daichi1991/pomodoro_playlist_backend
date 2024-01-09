@@ -30,6 +30,16 @@ class Api::V1::PomodorosController < ApplicationController
     end
   end
 
+  def update
+    pomodoro = Pomodoro.find_by(id: params[:id])
+    return render json: { errors: ["Couldn't find Pomodoro"] }, status: :unprocessable_entity unless pomodoro
+    if pomodoro.update(pomodoro_params)
+      render json: { pomodoro: pomodoro }, status: :ok
+    else
+      render json: { errors: pomodoro.errors.full_messages }, status: :unprocessable_entity
+    end
+  end
+
   def destroy
     pomodoro = Pomodoro.find_by(id: params[:id])
     return render json: { errors: ["Couldn't find Pomodoro"] }, status: :unprocessable_entity unless pomodoro

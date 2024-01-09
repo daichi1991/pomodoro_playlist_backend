@@ -86,6 +86,29 @@ RSpec.describe "Api::V1::Pomodoros", type: :request do
       expect(JSON.parse(response.body)["errors"]).to eq(["Couldn't find Pomodoro"])
     end
   end
+  describe "PUT /update" do
+    it "returns http success" do
+      put "/api/v1/pomodoros/#{pomodoros[0].id}", params: { pomodoro: { name: "Updated Pomodoro" } }, headers: request_headers
+      expect(response).to have_http_status(:success)
+    end
+    it "updates the pomodoro" do
+      expect {
+        put "/api/v1/pomodoros/#{pomodoros[0].id}", params: { pomodoro: { name: "Updated Pomodoro" } }, headers: request_headers
+      }.to change { pomodoros[0].reload.name }.from(pomodoros[0].name).to("Updated Pomodoro")
+    end
+    it "returns the updated pomodoro" do
+      put "/api/v1/pomodoros/#{pomodoros[0].id}", params: { pomodoro: { name: "Updated Pomodoro" } }, headers: request_headers
+      expect(JSON.parse(response.body)["pomodoro"].keys).to eq(["name", "work_time", "break_time", "term_count", "long_break_time", "term_repeat_count", "id", "user_id", "work_time_playlist_id", "break_time_playlist_id", "created_at", "updated_at"])
+    end
+    it "returns error if pomodoro does not exist" do
+      put "/api/v1/pomodoros/123", params: { pomodoro: { name: "Updated Pomodoro" } }, headers: request_headers
+      expect(JSON.parse(response.body)["errors"]).to eq(["Couldn't find Pomodoro"])
+    end
+    it "returns error if pomodoro is invalid" do
+      put "/api/v1/pomodoros/#{pomodoros[0].id}", params: { pomodoro: { long_break_time: -15 } }, headers: request_headers
+      expect(JSON.parse(response.body)["errors"]).to eq(["Long break time must be greater than 0"])
+    end
+  end
   describe "DELETE /destroy" do
     it "returns http success" do
       delete "/api/v1/pomodoros/#{pomodoros[0].id}", headers: request_headers
