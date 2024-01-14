@@ -10,8 +10,20 @@ class Api::V1::UsersController < ApplicationController
     code = params[:code]
     state = params[:state]
     refresh_token = get_refresh_token(code, state)
-    access_token = get_access_token(refresh_token)
+    access_token_response = get_access_token(refresh_token)
+    access_token = access_token_response['access_token']
     render json: { refresh_token: refresh_token, access_token: access_token }, status: :ok
+  end
+
+  def refresh_token
+    refresh_token = params[:refresh_token]
+    logger.debug "refresh_token: #{refresh_token}"
+    if refresh_token.nil? || refresh_token.empty? || refresh_token.blank?
+      render json: { error: 'refresh_token not found' }, status: :bad_request
+      return
+    end
+    access_token_response = get_access_token(refresh_token)
+    render json: { data: access_token_response }, status: :ok
   end
 
   private
@@ -48,7 +60,6 @@ class Api::V1::UsersController < ApplicationController
     }
 
     access_token_response = request_spotify_api('POST', uri, authorization, request_body)
-    access_token = access_token_response['access_token']
   end
 
   def profile

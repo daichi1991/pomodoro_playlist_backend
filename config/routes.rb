@@ -8,6 +8,7 @@ Rails.application.routes.draw do
       resources :users do
         get :login, on: :collection
         get :get_tokens, on: :collection
+        post :refresh_token, on: :collection
       end
       resources :playlists do
         get :current_user_playlists, on: :collection
