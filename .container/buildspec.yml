@@ -1,0 +1,63 @@
+version: 0.2
+
+phases:
+  pre_build:
+    on-failure: ABORT
+    commands:
+      - ECR_REPOSITORY_URL=${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION_NAME}.amazonaws.com/${ECR_REPOSITORY_NAME}
+      - aws ecr --region ${AWS_REGION_NAME} get-login-password | docker login --username AWS --password-stdin https://${ECR_REPOSITORY_URL}
+      - BUILD_TIME=`date '+%Y%m%d%H%M%S'`
+      - SHORT_COMMIT_HASH=${CODEBUILD_RESOLVED_SOURCE_VERSION:0:7}
+      # タグの字数制限は128文字以下なので、以下のうち可変であるブランチ名を94文字でトリムする
+      #   ブランチ名最大94文字 develop
+      #   連結文字1文字 ‐
+      #   サービス名10文字 log_router
+      #   連結文字1文字 ‐
+      #   日付14文字 20220820123456
+      #   連結文字1文字 ‐
+      #   コミットハッシュ7文字 abcdefg
+      # よりサービス名が短いweb, proxyはより長いブランチ名が利用可能だが、検索時に同一ブランチ名のほうが良いと考えて同じく94文字を上限とする
+      - BRANCH=${TARGET_BRANCH//\//^}; BRANCH=${BRANCH:0:94}
+      - PROXY_IMAGE_TAG="${BRANCH}-proxy-${BUILD_TIME}-${SHORT_COMMIT_HASH}"
+      - WEB_IMAGE_TAG="${BRANCH}-web-${BUILD_TIME}-${SHORT_COMMIT_HASH}"
+      - LOG_ROUTER_IMAGE_TAG="${BRANCH}-log_router-${BUILD_TIME}-${SHORT_COMMIT_HASH}"
+  build:
+    on-failure: ABORT
+    commands:
+      - "\
+        docker image build . \
+        -f deployments/ecs/proxy/Dockerfile \
+        -t ${ECR_REPOSITORY_URL}:${PROXY_IMAGE_TAG}\
+        "
+      - "\
+        docker image build . \
+        -f deployments/ecs/web/Dockerfile \
+        -t ${ECR_REPOSITORY_URL}:${WEB_IMAGE_TAG} \
+        --build-arg GITHUB_ACCESS_TOKEN=${GITHUB_ACCESS_TOKEN}\
+        "
+      - "\
+        docker image build . \
+        -f deployments/ecs/log_router/Dockerfile \
+        -t ${ECR_REPOSITORY_URL}:${LOG_ROUTER_IMAGE_TAG} \
+        "
+      - docker image ls
+  post_build:
+    on-failure: ABORT
+    commands:
+      - docker image push ${ECR_REPOSITORY_URL}:${PROXY_IMAGE_TAG}
+      - docker image push ${ECR_REPOSITORY_URL}:${WEB_IMAGE_TAG}
+      - docker image push ${ECR_REPOSITORY_URL}:${LOG_ROUTER_IMAGE_TAG}
+      # 直近のタスク定義を取得
+      - aws ecs describe-task-definition --task-definition ${TASK_DEFINITION} | jq '.taskDefinition' > deployments/ecs/taskdef.json
+      # コンテナイメージにビルドしたものを指定
+      - jq --arg imageUrl "${ECR_REPOSITORY_URL}:${WEB_IMAGE_TAG}" '.containerDefinitions |= map(select(.name=="web").image = $imageUrl // .)' deployments/ecs/taskdef.json > deployments/ecs/taskdef.json.1
+      - jq --arg imageUrl "${ECR_REPOSITORY_URL}:${PROXY_IMAGE_TAG}" '.containerDefinitions |= map(select(.name=="proxy").image = $imageUrl // .)' deployments/ecs/taskdef.json.1 > deployments/ecs/taskdef.json.2
+      - jq --arg imageUrl "${ECR_REPOSITORY_URL}:${LOG_ROUTER_IMAGE_TAG}" '.containerDefinitions |= map(select(.name=="log_router").image = $imageUrl // .)' deployments/ecs/taskdef.json.2 > deployments/ecs/taskdef.json.3
+      # artifactにわたすためにルートディレクトリに移動
+      - mv deployments/ecs/taskdef.json.3 ./taskdef.json
+      - mv deployments/ecs/appspec.yml ./appspec.yml
+
+artifacts:
+  files:
+    - appspec.yml
+    - taskdef.json
