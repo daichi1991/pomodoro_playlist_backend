@@ -11,7 +11,7 @@ ARG PLATFORM="linux/x86_64"
 # --------------------
 # base stage （全ステージで共通且つ（ほぼ）不変の初期設定）
 # --------------------
-FROM --platform=${PLATFORM} ${ARG_BASE_IMAGE_URL}ruby:${ARG_RUBY_VER}-slim-bookworm AS base
+FROM --platform=${PLATFORM} ${ARG_BASE_IMAGE_URL}ruby:${ARG_RUBY_VER}-slim AS base
 
 SHELL ["/bin/bash", "-eo", "pipefail", "-c"]
 
