@@ -17,4 +17,5 @@ Rails.application.routes.draw do
       resources :pomodoros, only: [:index, :create, :show, :update, :destroy]
     end
   end
+  resources :healthcheck, only: [:index]
 end
