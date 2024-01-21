@@ -26,18 +26,18 @@ phases:
     commands:
       - "\
         docker image build . \
-        -f deployments/ecs/proxy/Dockerfile \
+        -f .container/proxy/Dockerfile \
         -t ${ECR_REPOSITORY_URL}:${PROXY_IMAGE_TAG}\
         "
       - "\
         docker image build . \
-        -f deployments/ecs/web/Dockerfile \
+        -f .container/web/Dockerfile \
         -t ${ECR_REPOSITORY_URL}:${WEB_IMAGE_TAG} \
         --build-arg GITHUB_ACCESS_TOKEN=${GITHUB_ACCESS_TOKEN}\
         "
       - "\
         docker image build . \
-        -f deployments/ecs/log_router/Dockerfile \
+        -f .container/log_router/Dockerfile \
         -t ${ECR_REPOSITORY_URL}:${LOG_ROUTER_IMAGE_TAG} \
         "
       - docker image ls
@@ -48,14 +48,14 @@ phases:
       - docker image push ${ECR_REPOSITORY_URL}:${WEB_IMAGE_TAG}
       - docker image push ${ECR_REPOSITORY_URL}:${LOG_ROUTER_IMAGE_TAG}
       # 直近のタスク定義を取得
-      - aws ecs describe-task-definition --task-definition ${TASK_DEFINITION} | jq '.taskDefinition' > deployments/ecs/taskdef.json
+      - aws ecs describe-task-definition --task-definition ${TASK_DEFINITION} | jq '.taskDefinition' > .container/taskdef.json
       # コンテナイメージにビルドしたものを指定
-      - jq --arg imageUrl "${ECR_REPOSITORY_URL}:${WEB_IMAGE_TAG}" '.containerDefinitions |= map(select(.name=="web").image = $imageUrl // .)' deployments/ecs/taskdef.json > deployments/ecs/taskdef.json.1
-      - jq --arg imageUrl "${ECR_REPOSITORY_URL}:${PROXY_IMAGE_TAG}" '.containerDefinitions |= map(select(.name=="proxy").image = $imageUrl // .)' deployments/ecs/taskdef.json.1 > deployments/ecs/taskdef.json.2
-      - jq --arg imageUrl "${ECR_REPOSITORY_URL}:${LOG_ROUTER_IMAGE_TAG}" '.containerDefinitions |= map(select(.name=="log_router").image = $imageUrl // .)' deployments/ecs/taskdef.json.2 > deployments/ecs/taskdef.json.3
+      - jq --arg imageUrl "${ECR_REPOSITORY_URL}:${WEB_IMAGE_TAG}" '.containerDefinitions |= map(select(.name=="web").image = $imageUrl // .)' .container/taskdef.json > .container/taskdef.json.1
+      - jq --arg imageUrl "${ECR_REPOSITORY_URL}:${PROXY_IMAGE_TAG}" '.containerDefinitions |= map(select(.name=="proxy").image = $imageUrl // .)' .container/taskdef.json.1 > .container/taskdef.json.2
+      - jq --arg imageUrl "${ECR_REPOSITORY_URL}:${LOG_ROUTER_IMAGE_TAG}" '.containerDefinitions |= map(select(.name=="log_router").image = $imageUrl // .)' .container/taskdef.json.2 > .container/taskdef.json.3
       # artifactにわたすためにルートディレクトリに移動
-      - mv deployments/ecs/taskdef.json.3 ./taskdef.json
-      - mv deployments/ecs/appspec.yml ./appspec.yml
+      - mv .container/taskdef.json.3 ./taskdef.json
+      - mv .container/appspec.yml ./appspec.yml
 
 artifacts:
   files:
