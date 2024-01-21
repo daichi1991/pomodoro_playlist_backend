@@ -1,4 +1,4 @@
-ARG ARG_RUBY_VER="3.1.4"
+ARG ARG_RUBY_VER="3.1.3"
 
 # ECRのpublic registryを使用したい場合は "public.ecr.aws/LIBRARY_ROOT/" を指定
 #   例: Ruby （Docker Library版） "public.ecr.aws/docker/library/"
@@ -43,10 +43,7 @@ ENV APP_ROOT=/app \
     BUNDLE_JOBS=4 \
     BUNDLE_RETRY=3 \
     RUBY_VERSION=${ARG_RUBY_VER} \
-    RUBYGEMS_VERSION="3.3.19" \
-    NODE_MAJOR_VERSION="12" \
-    NODE_FULL_VERSION="12.18.4" \
-    PG_MAJOR_VERSION="12" \
+    RUBYGEMS_VERSION="3.3.20" \
     JEMALLOC_VERSION="5.3.0" \
     RAILS_ENV=production
 
