@@ -38,7 +38,7 @@ phases:
         docker image build . \
         -f .container/web/Dockerfile \
         -t ${ECR_REPOSITORY_URL}:${WEB_IMAGE_TAG} \
-        --build-arg GITHUB_ACCESS_TOKEN=${GITHUB_ACCESS_TOKEN}\
+        --build-arg RAILS_MASTER_KEY=${RAILS_MASTER_KEY}\
         "
       - "\
         docker image build . \
