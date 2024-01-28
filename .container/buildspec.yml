@@ -21,6 +21,11 @@ phases:
       - PROXY_IMAGE_TAG="${BRANCH}-proxy-${BUILD_TIME}-${SHORT_COMMIT_HASH}"
       - WEB_IMAGE_TAG="${BRANCH}-web-${BUILD_TIME}-${SHORT_COMMIT_HASH}"
       - LOG_ROUTER_IMAGE_TAG="${BRANCH}-log_router-${BUILD_TIME}-${SHORT_COMMIT_HASH}"
+      # docker-images for ECR image scanning
+      - PROXY_LATEST_IMAGE_TAG="${BRANCH}-proxy-latest"
+      - WEB_LATEST_IMAGE_TAG="${BRANCH}-web-latest"
+      - JOB_LATEST_IMAGE_TAG="${BRANCH}-job-latest"
+      - LOG_ROUTER_LATEST_IMAGE_TAG="${BRANCH}-log_router-latest"
   build:
     on-failure: ABORT
     commands:
@@ -40,6 +45,22 @@ phases:
         -f .container/log_router/Dockerfile \
         -t ${ECR_REPOSITORY_URL}:${LOG_ROUTER_IMAGE_TAG} \
         "
+      - "\
+        docker image build . \
+        -f .container/proxy/Dockerfile \
+        -t ${ECR_REPOSITORY_URL}:${PROXY_LATEST_IMAGE_TAG}\
+        "
+      - "\
+        docker image build . \
+        -f .container/web/Dockerfile \
+        -t ${ECR_REPOSITORY_URL}:${WEB_LATEST_IMAGE_TAG} \
+        --build-arg RAILS_MASTER_KEY=${RAILS_MASTER_KEY}\
+        "
+      - "\
+        docker image build . \
+        -f .container/log_router/Dockerfile \
+        -t ${ECR_REPOSITORY_URL}:${LOG_ROUTER_LATEST_IMAGE_TAG}\
+        "
       - docker image ls
   post_build:
     on-failure: ABORT
@@ -47,6 +68,17 @@ phases:
       - docker image push ${ECR_REPOSITORY_URL}:${PROXY_IMAGE_TAG}
       - docker image push ${ECR_REPOSITORY_URL}:${WEB_IMAGE_TAG}
       - docker image push ${ECR_REPOSITORY_URL}:${LOG_ROUTER_IMAGE_TAG}
+      - "\
+        aws ecr batch-delete-image \
+        --repository-name ${ECR_REPOSITORY_NAME} \
+        --image-ids imageTag=${PROXY_LATEST_IMAGE_TAG} \
+        imageTag=${WEB_LATEST_IMAGE_TAG} \
+        imageTag=${LOG_ROUTER_LATEST_IMAGE_TAG}\
+        "
+      - docker image push ${ECR_REPOSITORY_URL}:${PROXY_LATEST_IMAGE_TAG}
+      - docker image push ${ECR_REPOSITORY_URL}:${WEB_LATEST_IMAGE_TAG}
+      - docker image push ${ECR_REPOSITORY_URL}:${LOG_ROUTER_LATEST_IMAGE_TAG}
+
       # 直近のタスク定義を取得
       - aws ecs describe-task-definition --task-definition ${TASK_DEFINITION} | jq '.taskDefinition' > .container/taskdef.json
       # コンテナイメージにビルドしたものを指定
