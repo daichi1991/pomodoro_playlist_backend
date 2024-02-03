@@ -24,10 +24,20 @@ RUN apt install -y openssl
 
 ENV LC_ALL=ja_JP.UTF-8
 
-WORKDIR /app
-COPY .container/proxy/nginx.conf /app/nginx.conf
-COPY .container/proxy/entrypoint.sh /app/entrypoint.sh
+RUN cp -p /etc/nginx/nginx.conf /etc/nginx/nginx.conf.default
+
+# NOTE: ベースイメージの/var/log/nginx/配下のログファイル軍はstdout/stderrへのシンボリックリンクになっている
+#       今回はファイルとstdout/stderr両方への出力を行うため、シンボリックリンクを削除する
+RUN rm -f /var/log/nginx/*
+
+# NOTE: デフォルトのログローテーション設定を削除しカスタムログローテーション設定を導入する
+RUN mkdir -p "/var/log/nginx/rotated"
+RUN rm -f /etc/logrotate.d/nginx
+COPY .container/proxy/logrotate/* /etc/logrotate.d/
+RUN chmod 644 /etc/logrotate.d/*
+
+COPY .container/proxy/nginx.conf /etc/nginx/nginx.conf
 
 EXPOSE 80
 
-ENTRYPOINT ["/bin/bash", "/app/entrypoint.sh"]
+CMD ["nginx"]
