@@ -118,6 +118,8 @@ RUN gem install nokogiri --platform=ruby && \
     bundle install && \
     rm -rf /usr/local/bundle/cache
 
+ARG RAILS_MASTER_KEY
+
 # --------------------
 # production stage
 # --------------------
