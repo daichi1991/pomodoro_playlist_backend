@@ -32,7 +32,7 @@ class Api::V1::UsersController < ApplicationController
     if state.nil?
       redirect '/#' + URI.encode_www_form(error: 'state_mismatch')
     else
-      redirect_uri = 'http://localhost:3001'
+      redirect_uri = ENV['FRONTEND_ORIGIN']
       client_id = ENV["SPOTIFY_CLIENT_ID"]
       client_secret = ENV["SPOTIFY_CLIENT_SECRET"]
 

@@ -4,7 +4,7 @@ module SpotifyAuthUtils
   def spotify_auth_url
     state = generate_random_string(16)
     scope = 'user-read-private user-read-playback-state user-read-email streaming playlist-read-private user-modify-playback-state user-read-currently-playing'
-    redirect_uri = 'http://localhost:3001'
+    redirect_uri = ENV['FRONTEND_ORIGIN']
     query_params = {
       response_type: 'code',
       client_id: ENV["SPOTIFY_CLIENT_ID"],
