@@ -12,7 +12,7 @@ class Api::V1::PomodorosController < ApplicationController
 
   def index
     spotify_user_id = request.headers["Pomodoro-Authorization"]
-    user = User.find_or_create_by(spotify_id: params[:spotify_user_id])
+    user = User.find_or_create_by(spotify_id: spotify_user_id)
     if user
       pomodoros = user.pomodoros
       render json: { pomodoros: pomodoros }, status: :ok
